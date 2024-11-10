@@ -1,7 +1,8 @@
-#include <pcl/io/las_io.h>
+#include <liblas/liblas.hpp>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/passthrough.h>
+#include <pcl/io/pcd_io.h>
 #include <iostream>
 
 int main(int argc, char** argv) {
@@ -10,11 +11,32 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    pcl::PointCloud<pcl::PointXYZI>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZI>());
-    if (pcl::io::loadLASFile(argv[1], *cloud) == -1) {
-        std::cerr << "Error loading LAS file." << std::endl;
+    std::ifstream ifs;
+    ifs.open(argv[1], std::ios::in | std::ios::binary);
+    if (!ifs) {
+        std::cerr << "Error opening file." << std::endl;
         return -1;
     }
+
+    liblas::ReaderFactory f;
+    liblas::Reader reader = f.CreateWithStream(ifs);
+
+    pcl::PointCloud<pcl::PointXYZI>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZI>);
+
+    while (reader.ReadNextPoint()) {
+        liblas::Point const& p = reader.GetPoint();
+        pcl::PointXYZI point;
+        point.x = p.GetX();
+        point.y = p.GetY();
+        point.z = p.GetZ();
+        point.intensity = p.GetIntensity();
+        cloud->points.push_back(point);
+    }
+
+    cloud->width = cloud->points.size();
+    cloud->height = 1;
+    cloud->is_dense = false;
+
     std::cout << "Loaded " << cloud->points.size() << " points from the LAS file." << std::endl;
 
     pcl::VoxelGrid<pcl::PointXYZI> voxel_filter;

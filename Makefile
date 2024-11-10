@@ -1,8 +1,10 @@
 CC = g++
-CFLAGS = -Wall -O2 -std=c++11
-LDFLAGS = -lpcl_io -lpcl_visualization -lpcl_common -lpcl_filters -lpcl_kdtree -lpcl_sample_consensus -lpcl_search -lboost_system -las -lm
+CFLAGS = -Wall -O2 -std=c++14 $(shell pkg-config --cflags pcl_common pcl_io pcl_visualization pcl_filters)
+CFLAGS += -I/usr/include/vtk -I/usr/include/geotiff
+LDFLAGS = $(shell pkg-config --libs pcl_common pcl_io pcl_visualization pcl_filters)
+# LDFLAGS += -lvtk -lgeotiff -llas
 
-SOURCES = main.cpp
+SOURCES = pcl_lidar_viz.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 EXECUTABLE = lidar_viewer
 
